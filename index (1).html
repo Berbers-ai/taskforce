@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TaskForce</title>
+<meta name="description" content="Jouw dagelijkse takenlijst">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TaskForce">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f0f4ff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px 80px;
+    color: #1e293b;
+  }
+
+  header {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+
+
+  .logo-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e40af;
+    letter-spacing: -0.4px;
+  }
+
+  /* WEEK STRIP */
+  .week-strip {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    gap: 5px;
+    margin-bottom: 28px;
+  }
+
+  .week-day {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 4px;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+    background: transparent;
+  }
+  .week-day:hover { background: white; }
+  .week-day.active { background: #2563eb; }
+
+  .wd-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .week-day.active .wd-label { color: rgba(255,255,255,0.65); }
+
+  .wd-num {
+    font-size: 15px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .week-day.active .wd-num { color: white; }
+  .week-day.is-today .wd-num { color: #2563eb; }
+  .week-day.active.is-today .wd-num { color: white; }
+
+  .wd-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: transparent;
+  }
+  .week-day.has-tasks .wd-dot { background: #93c5fd; }
+  .week-day.active .wd-dot { background: rgba(255,255,255,0.45); }
+
+  /* DATE HEADER */
+  .date-nav {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .nav-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: white;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  }
+  .nav-btn:hover { background: #eff6ff; color: #2563eb; }
+
+  .date-center { text-align: center; }
+
+  .date-day {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    letter-spacing: -0.4px;
+  }
+
+  .date-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+
+  .today-link {
+    font-size: 12px;
+    color: #2563eb;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    margin-top: 4px;
+    display: inline-block;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+  }
+  .today-link:hover { opacity: 1; }
+
+  /* SUMMARY */
+  .summary {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 2px;
+    min-height: 22px;
+  }
+
+  .summary-text { font-size: 12.5px; color: #94a3b8; }
+  .summary-text strong { color: #2563eb; font-weight: 600; }
+
+  .clear-btn {
+    font-size: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    transition: color 0.15s;
+  }
+  .clear-btn:hover { color: #ef4444; }
+
+  /* TASKS */
+  .task-list {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 15px;
+    background: white;
+    border-radius: 11px;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+    animation: fadeSlide 0.18s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-item:hover { border-color: #bfdbfe; }
+  .task-item.done { opacity: 0.4; }
+
+  .check {
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+    transition: all 0.15s;
+  }
+  .check:hover { border-color: #2563eb; }
+  .check.checked { background: #2563eb; border-color: #2563eb; }
+
+  .task-text {
+    flex: 1;
+    font-size: 14.5px;
+    color: #1e293b;
+    line-height: 1.4;
+    outline: none;
+    background: transparent;
+    border: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .task-item.done .task-text {
+    text-decoration: line-through;
+    color: #94a3b8;
+  }
+
+  .del-btn {
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .task-item:hover .del-btn { opacity: 1; }
+  .del-btn:hover { background: #fee2e2; color: #ef4444; }
+
+  /* EMPTY */
+  .empty {
+    text-align: center;
+    padding: 40px 0 20px;
+    color: #cbd5e1;
+  }
+  .empty-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+  .empty span { font-size: 14px; }
+
+  /* ADD */
+  .add-row {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 8px;
+  }
+
+  .add-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 15px;
+    background: white;
+    border-radius: 11px;
+    border: 1.5px dashed #bfdbfe;
+    transition: all 0.15s;
+    cursor: text;
+  }
+  .add-wrap:focus-within {
+    border-style: solid;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.09);
+  }
+
+  .add-plus {
+    font-size: 20px;
+    color: #93c5fd;
+    font-weight: 300;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .add-wrap:focus-within .add-plus { color: #2563eb; }
+
+  .add-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14.5px;
+    color: #1e293b;
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+  }
+  .add-input::placeholder { color: #cbd5e1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="112" height="29" viewBox="0 0 140 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Icon mark: shield with checkmark -->
+      <rect x="0" y="0" width="36" height="36" rx="9" fill="url(#grad)"/>
+      <!-- Shield shape -->
+      <path d="M18 7L10 10.5V18.5C10 22.9 13.5 27 18 28.5C22.5 27 26 22.9 26 18.5V10.5L18 7Z" fill="white" opacity="0.15"/>
+      <path d="M18 8.5L11 11.7V18.8C11 22.8 14.1 26.5 18 27.8C21.9 26.5 25 22.8 25 18.8V11.7L18 8.5Z" fill="white" opacity="0.1"/>
+      <!-- Checkmark -->
+      <polyline points="13,18 17,22 23,14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <!-- Wordmark -->
+      <text x="46" y="24" font-family="Inter, sans-serif" font-size="17" font-weight="700" letter-spacing="-0.5" fill="#1e40af">Task</text>
+      <text x="84" y="24" font-family="Inter, sans-serif" font-size="17" font-weight="400" letter-spacing="-0.3" fill="#3b82f6">Force</text>
+      <defs>
+        <linearGradient id="grad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#2563eb"/>
+          <stop offset="100%" stop-color="#1d4ed8"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div id="sync-status" style="position:absolute;right:16px;top:20px;"></div>
+</header>
+
+<div class="week-strip" id="week-strip"></div>
+
+<div class="date-nav">
+  <button class="nav-btn" onclick="changeDay(-1)">‹</button>
+  <div class="date-center">
+    <div class="date-day" id="date-day"></div>
+    <div class="date-sub" id="date-sub"></div>
+    <button class="today-link" id="today-link" onclick="goToday()" style="display:none">← Naar vandaag</button>
+  </div>
+  <button class="nav-btn" onclick="changeDay(1)">›</button>
+</div>
+
+<div class="summary" id="summary"></div>
+<div class="task-list" id="task-list"></div>
+
+<div class="add-row">
+  <div class="add-wrap" onclick="document.getElementById('add-input').focus()">
+    <span class="add-plus">+</span>
+    <input class="add-input" id="add-input" placeholder="Taak toevoegen…" onkeydown="handleAdd(event)">
+  </div>
+</div>
+
+<script>
+  const DAY_NAMES  = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+  const DAY_SHORT  = ['zo','ma','di','wo','do','vr','za'];
+  const MONTHS     = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+
+  let tasks = {};
+  let current = todayKey();
+  let uid = 1;
+
+  function todayKey() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function parseKey(k) {
+    return new Date(k + 'T12:00:00');
+  }
+
+  function fmtKey(d) {
+    return d.toISOString().split('T')[0];
+  }
+
+  function changeDay(n) {
+    const d = parseKey(current);
+    d.setDate(d.getDate() + n);
+    current = fmtKey(d);
+    render();
+  }
+
+  function goToday() {
+    current = todayKey();
+    render();
+  }
+
+  function jumpTo(k) {
+    current = k;
+    render();
+  }
+
+  /* ---- WEEK STRIP ---- */
+  function weekDays() {
+    const d = parseKey(current);
+    const off = (d.getDay() + 6) % 7; // monday = 0
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - off);
+    return Array.from({length:7}, (_,i) => {
+      const x = new Date(monday);
+      x.setDate(monday.getDate() + i);
+      return fmtKey(x);
+    });
+  }
+
+  function renderStrip() {
+    const strip = document.getElementById('week-strip');
+    const t = todayKey();
+    strip.innerHTML = weekDays().map(k => {
+      const d = parseKey(k);
+      const hasOpen = (tasks[k]||[]).some(t=>!t.done);
+      return `<div class="week-day ${k===current?'active':''} ${k===t?'is-today':''} ${hasOpen?'has-tasks':''}" onclick="jumpTo('${k}')">
+        <span class="wd-label">${DAY_SHORT[d.getDay()]}</span>
+        <span class="wd-num">${d.getDate()}</span>
+        <span class="wd-dot"></span>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---- DATE HEADER ---- */
+  function renderHeader() {
+    const d = parseKey(current);
+    const t = todayKey();
+    const isToday = current === t;
+    const tom = (() => { const x = parseKey(t); x.setDate(x.getDate()+1); return fmtKey(x); })();
+    const yes = (() => { const x = parseKey(t); x.setDate(x.getDate()-1); return fmtKey(x); })();
+    let label = DAY_NAMES[d.getDay()];
+    if (isToday)         label = 'Vandaag';
+    else if (current === tom) label = 'Morgen';
+    else if (current === yes) label = 'Gisteren';
+    document.getElementById('date-day').textContent = label;
+    document.getElementById('date-sub').textContent = `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    document.getElementById('today-link').style.display = isToday ? 'none' : 'inline-block';
+  }
+
+  /* ---- SUMMARY ---- */
+  function renderSummary() {
+    const list = tasks[current] || [];
+    const done = list.filter(t=>t.done).length;
+    const open = list.length - done;
+    const el = document.getElementById('summary');
+    if (!list.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+      <span class="summary-text">${open > 0 ? `<strong>${open}</strong> open` : '🎉 Alles klaar'}${done > 0 ? ` &middot; ${done} voltooid` : ''}</span>
+      ${done > 0 ? `<button class="clear-btn" onclick="clearDone()">Verwijder voltooide</button>` : ''}
+    `;
+  }
+
+  /* ---- TASKS ---- */
+  function renderTasks() {
+    const list = document.getElementById('task-list');
+    const items = tasks[current] || [];
+    if (!items.length) {
+      list.innerHTML = `<div class="empty"><span class="empty-icon">✌️</span><span>Geen taken voor deze dag</span></div>`;
+      return;
+    }
+    list.innerHTML = items.map(t => `
+      <div class="task-item ${t.done?'done':''}" data-id="${t.id}">
+        <div class="check ${t.done?'checked':''}" onclick="toggle('${t.id}')">${t.done?'✓':''}</div>
+        <span class="task-text" contenteditable="true" onblur="saveEdit('${t.id}',this)" spellcheck="false">${esc(t.text)}</span>
+        <button class="del-btn" onclick="del('${t.id}')">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function render() {
+    renderStrip();
+    renderHeader();
+    renderTasks();
+    renderSummary();
+  }
+
+  /* ---- ACTIONS ---- */
+  function handleAdd(e) {
+    if (e.key !== 'Enter') return;
+    const inp = document.getElementById('add-input');
+    const text = inp.value.trim();
+    if (!text) return;
+    if (!tasks[current]) tasks[current] = [];
+    tasks[current].push({ id: uid++, text, done: false });
+    inp.value = '';
+    render();
+  }
+
+  function toggle(id) {
+    const t = (tasks[current]||[]).find(t=>t.id===id);
+    if (t) t.done = !t.done;
+    render();
+  }
+
+  function del(id) {
+    if (tasks[current]) tasks[current] = tasks[current].filter(t=>t.id!==id);
+    render();
+  }
+
+  function saveEdit(id, el) {
+    const t = (tasks[current]||[]).find(t=>t.id===id);
+    if (t) t.text = el.textContent.trim() || t.text;
+  }
+
+  function clearDone() {
+    if (tasks[current]) tasks[current] = tasks[current].filter(t=>!t.done);
+    render();
+  }
+
+  function esc(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ---- SUPABASE ---- */
+  const SUPA_URL = 'https://hphaceypwvenbgjalmgh.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwaGFjZXlwd3ZlbmJnamFsbWdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NjA4MzMsImV4cCI6MjA4NzUzNjgzM30.iV3o5zTdW2LosnjlKNozwplm1-B9XfmFimVDgNtO9wY';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Prefer': 'return=representation'
+  };
+
+  async function loadAll() {
+    setStatus('loading');
+    try {
+      const res = await fetch(`${SUPA_URL}/rest/v1/tasks?select=*&order=created_at.asc`, { headers });
+      const data = await res.json();
+      tasks = {};
+      data.forEach(row => {
+        if (!tasks[row.date]) tasks[row.date] = [];
+        tasks[row.date].push({ id: row.id, text: row.text, done: row.done });
+      });
+      setStatus('ok');
+    } catch(e) {
+      setStatus('error');
+    }
+    render();
+  }
+
+  async function addTask(text) {
+    const res = await fetch(`${SUPA_URL}/rest/v1/tasks`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ date: current, text, done: false })
+    });
+    const rows = await res.json();
+    if (!tasks[current]) tasks[current] = [];
+    tasks[current].push({ id: rows[0].id, text: rows[0].text, done: false });
+    render();
+  }
+
+  async function updateTask(id, patch) {
+    await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(patch)
+    });
+  }
+
+  async function removeTask(id) {
+    await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`, {
+      method: 'DELETE',
+      headers
+    });
+  }
+
+  /* status indicator */
+  function setStatus(s) {
+    const el = document.getElementById('sync-status');
+    if (s === 'loading') el.innerHTML = '<span style="color:#93c5fd;font-size:12px;">⟳ Laden…</span>';
+    else if (s === 'ok')  el.innerHTML = '<span style="color:#86efac;font-size:12px;">● Gesynchroniseerd</span>';
+    else                  el.innerHTML = '<span style="color:#fca5a5;font-size:12px;">⚠ Geen verbinding</span>';
+  }
+
+  /* override actions to use Supabase */
+  function handleAdd(e) {
+    if (e.key !== 'Enter') return;
+    const inp = document.getElementById('add-input');
+    const text = inp.value.trim();
+    if (!text) return;
+    inp.value = '';
+    addTask(text);
+  }
+
+  function toggle(id) {
+    const t = (tasks[current]||[]).find(t=>t.id===id);
+    if (!t) return;
+    t.done = !t.done;
+    render();
+    updateTask(id, { done: t.done });
+  }
+
+  function del(id) {
+    if (tasks[current]) tasks[current] = tasks[current].filter(t=>t.id!==id);
+    render();
+    removeTask(id);
+  }
+
+  function saveEdit(id, el) {
+    const t = (tasks[current]||[]).find(t=>t.id===id);
+    if (!t) return;
+    const newText = el.textContent.trim() || t.text;
+    if (newText !== t.text) {
+      t.text = newText;
+      updateTask(id, { text: newText });
+    }
+  }
+
+  function clearDone() {
+    const done = (tasks[current]||[]).filter(t=>t.done);
+    if (tasks[current]) tasks[current] = tasks[current].filter(t=>!t.done);
+    render();
+    done.forEach(t => removeTask(t.id));
+  }
+
+  /* ---- REALTIME via Supabase WebSocket ---- */
+  let wsRef = 0;
+  let heartbeatTimer = null;
+
+  function subscribeRealtime() {
+    const ws = new WebSocket(
+      `wss://hphaceypwvenbgjalmgh.supabase.co/realtime/v1/websocket?apikey=${SUPA_KEY}&vsn=1.0.0`
+    );
+
+    ws.onopen = () => {
+      setStatus('ok');
+      // Join the postgres_changes channel
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:tasks',
+        event: 'phx_join',
+        payload: {
+          config: {
+            broadcast: { self: false },
+            postgres_changes: [{ event: '*', schema: 'public', table: 'tasks' }]
+          }
+        },
+        ref: String(++wsRef)
+      }));
+      // Heartbeat every 25s to keep connection alive
+      heartbeatTimer = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(++wsRef) }));
+        }
+      }, 25000);
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        // Triggered on any DB change
+        if (msg.event === 'postgres_changes' || (msg.payload && msg.payload.data && msg.payload.data.type)) {
+          loadAll();
+        }
+      } catch(_) {}
+    };
+
+    ws.onerror = () => setStatus('error');
+
+    ws.onclose = () => {
+      setStatus('error');
+      clearInterval(heartbeatTimer);
+      // Reconnect after 3s
+      setTimeout(subscribeRealtime, 3000);
+    };
+  }
+
+  /* ---- FALLBACK: poll every 10s in case WS fails ---- */
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadAll();
+  }, 10000);
+
+  // Reload when tab becomes visible again (e.g. switching from phone to desktop)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') loadAll();
+  });
+
+  loadAll();
+  subscribeRealtime();
+
+  // Register service worker voor PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+
+</script>
+</body>
+</html>
